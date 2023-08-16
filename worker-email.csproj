@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
-    <Nullable>enable</Nullable>
+    <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>dotnet-worker_email-595f1c9d-00ce-4889-9cde-15e41fb25144</UserSecretsId>
     <RootNamespace>worker_email</RootNamespace>
