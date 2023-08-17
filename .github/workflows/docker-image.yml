@@ -7,9 +7,10 @@ on:
       - '**/README.md'
   pull_request:
     branches: [ "main" ]
+
 jobs:
   nuget-workflow:
     uses: BrunoBrasolin/workflow-template/.github/workflows/docker-image.yml@main
-    inputs:
+    with:
       image: brunobrasolin/worker-email
     secrets: inherit
