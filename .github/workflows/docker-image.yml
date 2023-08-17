@@ -10,6 +10,6 @@ on:
 jobs:
   nuget-workflow:
     uses: BrunoBrasolin/workflow-template/.github/workflows/docker-image.yml@main
-    with:
+    inputs:
       image: brunobrasolin/worker-email
     secrets: inherit
