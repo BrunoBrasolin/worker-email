@@ -22,5 +22,4 @@ jobs:
     with:
       dockerAccount: brunobrasolin
       applicationName: worker-email
-      port: 0
     secrets: inherit
