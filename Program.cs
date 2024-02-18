@@ -8,8 +8,7 @@ builder.ConfigureAppConfiguration((hostingContext, config) =>
 	config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 });
 
-IHost host = builder.ConfigureServices(args)
-	.ConfigureServices(services =>
+IHost host = builder.ConfigureServices((hostContext, services) =>
 	{
 		services.ConfigureGamidas();
 		services.AddHostedService<WorkerEmail>();
