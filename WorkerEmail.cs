@@ -11,13 +11,11 @@ namespace worker_email
 {
     public class WorkerEmail : BackgroundService
     {
-        private readonly ILogger<WorkerEmail> _logger;
         private readonly IConfiguration _configuration;
         private readonly IModel _channel;
 
-        public WorkerEmail(ILogger<WorkerEmail> logger, IConfiguration configuration)
+        public WorkerEmail(IConfiguration configuration)
         {
-            _logger = logger;
             _configuration = configuration;
 
             ConnectionFactory factory = new()
@@ -29,13 +27,11 @@ namespace worker_email
             };
 
             IConnection _connection = factory.CreateConnection();
-            _logger.LogInformation($"Created RabbitMQ Connection.");
 
-             _channel = _connection.CreateModel();
-            _logger.LogInformation($"Created RabbitMQ Model.");
+            _channel = _connection.CreateModel();
         }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             EventingBasicConsumer consumer = new(_channel);
 
@@ -65,6 +61,8 @@ namespace worker_email
             };
 
             _channel.BasicConsume(autoAck: true, queue: QueueName.EmailQueue, consumer: consumer);
+
+            return Task.CompletedTask;
         }
     }
 
