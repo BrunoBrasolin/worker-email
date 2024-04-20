@@ -13,7 +13,7 @@ jobs:
   CI:
     uses: BrunoBrasolin/workflow-template/.github/workflows/net-docker-ci.yml@main
     with:
-      image: brunobrasolin/worker-email
+      image: worker-email
     secrets: inherit
   
   CD:
