@@ -9,76 +9,81 @@ using Newtonsoft.Json;
 
 namespace worker_email
 {
-    public class WorkerEmail : BackgroundService
-    {
-        private readonly IConfiguration _configuration;
-        private readonly IModel _channel;
+	public class WorkerEmail : BackgroundService
+	{
+		private readonly IConfiguration _configuration;
+		private readonly IModel _channel;
+		private readonly ILogger<WorkerEmail> _logger;
 
-        public WorkerEmail(IConfiguration configuration)
-        {
-            _configuration = configuration;
+		public WorkerEmail(IConfiguration configuration, ILogger<WorkerEmail> logger)
+		{
+			_configuration = configuration;
+			_logger = logger;
 
-            ConnectionFactory factory = new()
-            {
-                HostName = _configuration["RabbitMQ:HostName"],
-                Port = int.Parse(_configuration["RabbitMQ:Port"]),
-                UserName = _configuration["RabbitMQ:UserName"],
-                Password = _configuration["RabbitMQ:Password"],
-            };
+			ConnectionFactory factory = new()
+			{
+				HostName = _configuration["RabbitMQ:HostName"],
+				Port = int.Parse(_configuration["RabbitMQ:Port"]),
+				UserName = _configuration["RabbitMQ:UserName"],
+				Password = _configuration["RabbitMQ:Password"],
+			};
 
-            IConnection _connection = factory.CreateConnection();
+			IConnection _connection = factory.CreateConnection();
 
-            _channel = _connection.CreateModel();
-        }
+			_channel = _connection.CreateModel();
+		}
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            EventingBasicConsumer consumer = new(_channel);
+		protected override Task ExecuteAsync(CancellationToken stoppingToken)
+		{
+			EventingBasicConsumer consumer = new(_channel);
 
-            consumer.Received += (model, ea) =>
-            {
-                byte[] body = ea.Body.ToArray();
+			consumer.Received += (model, ea) =>
+			{
+				_logger.LogInformation("Novo email a ser enviado");
 
-                string json = Encoding.UTF8.GetString(body);
+				byte[] body = ea.Body.ToArray();
 
-                EmailModel email = JsonConvert.DeserializeObject<EmailModel>(json);
+				string json = Encoding.UTF8.GetString(body);
 
-                SmtpConfiguration smtpConfiguration = new(_configuration["SmtpConfiguration:Server"], Int32.Parse(_configuration["SmtpConfiguration:Port"]), _configuration["SmtpConfiguration:Username"], _configuration["SmtpConfiguration:AppPassword"]);
+				EmailModel email = JsonConvert.DeserializeObject<EmailModel>(json);
 
-                SmtpClient smtpClient = new(smtpConfiguration.Server, smtpConfiguration.Port)
-                {
-                    EnableSsl = true,
-                    Credentials = new NetworkCredential(smtpConfiguration.Username, smtpConfiguration.AppPassword)
-                };
+				SmtpConfiguration smtpConfiguration = new(_configuration["SmtpConfiguration:Server"], Int32.Parse(_configuration["SmtpConfiguration:Port"]), _configuration["SmtpConfiguration:Username"], _configuration["SmtpConfiguration:AppPassword"]);
 
-                MailMessage message = new(smtpConfiguration.Username, email.Recipient)
-                {
-                    Subject = email.Subject,
-                    Body = email.Body
-                };
+				SmtpClient smtpClient = new(smtpConfiguration.Server, smtpConfiguration.Port)
+				{
+					EnableSsl = true,
+					Credentials = new NetworkCredential(smtpConfiguration.Username, smtpConfiguration.AppPassword)
+				};
 
-                smtpClient.Send(message);
-            };
+				MailMessage message = new(smtpConfiguration.Username, email.Recipient)
+				{
+					Subject = email.Subject,
+					Body = email.Body
+				};
 
-            _channel.BasicConsume(autoAck: true, queue: QueueName.EmailQueue, consumer: consumer);
+				smtpClient.Send(message);
+				_logger.LogInformation("Email enviado com sucesso");
+			};
 
-            return Task.CompletedTask;
-        }
-    }
+			_channel.BasicConsume(autoAck: true, queue: QueueName.EmailQueue, consumer: consumer);
 
-    class SmtpConfiguration
-    {
-        public string Server;
-        public int Port;
-        public string Username;
-        public string AppPassword;
+			return Task.CompletedTask;
+		}
+	}
 
-        public SmtpConfiguration(string server, int port, string username, string appPassword)
-        {
-            this.Server = server;
-            this.Port = port;
-            this.Username = username;
-            this.AppPassword = appPassword;
-        }
-    }
+	class SmtpConfiguration
+	{
+		public string Server;
+		public int Port;
+		public string Username;
+		public string AppPassword;
+
+		public SmtpConfiguration(string server, int port, string username, string appPassword)
+		{
+			this.Server = server;
+			this.Port = port;
+			this.Username = username;
+			this.AppPassword = appPassword;
+		}
+	}
 }
