@@ -26,6 +26,7 @@ namespace worker_email
 				Port = int.Parse(_configuration["RabbitMQ:Port"]),
 				UserName = _configuration["RabbitMQ:UserName"],
 				Password = _configuration["RabbitMQ:Password"],
+				VirtualHost = _configuration["RabbitMQ:VirtualHost"]
 			};
 
 			IConnection _connection = factory.CreateConnection();
